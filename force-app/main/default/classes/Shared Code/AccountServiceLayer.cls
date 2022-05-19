@@ -133,4 +133,26 @@ public with sharing class AccountServiceLayer {
             throw new ASLException(nae.getMessage());
         }
     }
+
+    @testvisible
+     private static void changeAccountOwnerToZipCodeOwner(List<Account> accountList, Map<Id,Account> oldAccountMap) {
+        Map<String,ID> zipCodeUsersMap = new Map<String,Id>();
+        //Map<Id,Account> accountMap = new Map<Id,Account>(accountList);
+        //Set<String> zipCodeSet = new Set<String>();
+        
+        List<Territory__c> territoriesList = [Select Id, Name, OwnerId from Territory__c  WITH SECURITY_ENFORCED];
+        for(Territory__c eachTerritory : territoriesList){
+            zipCodeUsersMap.put(eachTerritory.Name, eachTerritory.OwnerId);
+        }
+
+        for(Account eachAccount : accountList){
+            if(String.isNotBlank(eachAccount.BillingPostalCode)
+                && eachAccount.BillingPostalCode!= oldAccountMap.get(eachAccount.Id).BillingPostalCode){
+                    if(zipCodeUsersMap.keySet().contains(eachAccount.BillingPostalCode)){
+                        eachAccount.OwnerId = zipCodeUsersMap.get(eachAccount.BillingPostalCode);
+                    }
+            }
+        }
+        
+    }
 }
